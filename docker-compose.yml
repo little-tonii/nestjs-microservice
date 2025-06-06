@@ -1,0 +1,104 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper
+      - zookeeper-log:/var/log/zookeeper
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      zookeeper:
+        condition: service_started
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+      - kafka-log:/var/log/kafka
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      kafka:
+        condition: service_started
+
+  order-database:
+    image: postgres:16
+    container_name: order-database
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - order-database:/var/lib/postgresql/data
+    env_file: ./order-service/.env
+    healthcheck:
+      test: pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  payment-database:
+    image: postgres:16
+    container_name: payment-database
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    volumes:
+      - payment-database:/var/lib/postgresql/data
+    env_file: ./payment-service/.env
+    healthcheck:
+      test: pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    restart: unless-stopped
+    depends_on:
+      order-database:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    env_file: ./order-service/.env
+    ports:
+      - "3000:3000"
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    restart: unless-stopped
+    depends_on:
+      payment-database:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    env_file: ./payment-service/.env
+    ports:
+      - "3001:3000"
+
+volumes:
+  order-database:
+  payment-database:
+  zookeeper-data:
+  zookeeper-log:
+  kafka-data:
+  kafka-log:
