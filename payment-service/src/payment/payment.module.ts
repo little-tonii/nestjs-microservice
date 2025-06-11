@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentEntity } from './entity/payment.entity';
-import { PaymentProducer } from './message/payment.producer';
-import { PaymentConsumer } from './message/payment.consumer';
+import { PaymentProducer } from './kafka/payment.producer';
+import { PaymentConsumer } from './kafka/payment.consumer';
 import { PaymentService } from './service/payment.service';
 
 @Module({

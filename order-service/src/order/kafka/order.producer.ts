@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { ProviderInjector } from 'src/common/const/provider.const';
-import { OrderCreatedMessage } from '../dto/order.producer';
-import { KafkaTopic } from 'src/common/const/kafka.const';
+import { OrderCreatedMessage } from '../payload/order.producer';
+import { KafkaMessage } from 'src/common/const/kafka.const';
 
 @Injectable()
 export class OrderProducer {
@@ -12,8 +12,8 @@ export class OrderProducer {
   ) {}
 
   produceOrderCreatedEvent(payload: OrderCreatedMessage): void {
-    this.kafkaClient.emit<KafkaTopic, OrderCreatedMessage>(
-      KafkaTopic.ORDER_CREATED,
+    this.kafkaClient.emit<KafkaMessage, OrderCreatedMessage>(
+      KafkaMessage.ORDER_CREATED,
       payload,
     );
   }

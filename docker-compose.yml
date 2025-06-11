@@ -77,9 +77,21 @@ services:
       - nestjs-microservice
     volumes:
       - order-database:/var/lib/postgresql/data
-    env_file: ./order-service/.env
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${ORDER_DATABASE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${ORDER_DATABASE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${ORDER_DATABASE_POSTGRES_DB}
     healthcheck:
-      test: pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${ORDER_DATABASE_POSTGRES_USER}",
+          "-d",
+          "${ORDER_DATABASE_POSTGRES_DB}",
+        ]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -94,9 +106,50 @@ services:
       - nestjs-microservice
     volumes:
       - payment-database:/var/lib/postgresql/data
-    env_file: ./payment-service/.env
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${PAYMENT_DATABASE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${PAYMENT_DATABASE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${PAYMENT_DATABASE_POSTGRES_DB}
     healthcheck:
-      test: pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${PAYMENT_DATABASE_POSTGRES_USER}",
+          "-d",
+          "${PAYMENT_DATABASE_POSTGRES_DB}",
+        ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  user-database:
+    image: postgres:16
+    container_name: user-database
+    restart: unless-stopped
+    ports:
+      - "5434:5432"
+    networks:
+      - nestjs-microservice
+    volumes:
+      - user-database:/var/lib/postgresql/data
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${USER_DATABASE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${USER_DATABASE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${USER_DATABASE_POSTGRES_DB}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${USER_DATABASE_POSTGRES_USER}",
+          "-d",
+          "${USER_DATABASE_POSTGRES_DB}",
+        ]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -131,6 +184,21 @@ services:
     networks:
       - nestjs-microservice
 
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    restart: unless-stopped
+    depends_on:
+      user-database:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    env_file: ./user-service/.env
+    networks:
+      - nestjs-microservice
+
   gateway:
     build:
       context: ./gateway
@@ -153,3 +221,4 @@ volumes:
   kafka-log:
   order-database:
   payment-database:
+  user-database:

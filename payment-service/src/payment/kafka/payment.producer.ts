@@ -4,8 +4,8 @@ import { ProviderInjector } from 'src/common/const/provider.const';
 import {
   PaymentFailureMessage,
   PaymentSuccessMessage,
-} from '../dto/payment.producer';
-import { KafkaTopic } from 'src/common/const/kafka.const';
+} from '../payload/payment.producer';
+import { KafkaMessage } from 'src/common/const/kafka.const';
 
 @Injectable()
 export class PaymentProducer {
@@ -15,15 +15,15 @@ export class PaymentProducer {
   ) {}
 
   producePaymentSuccessEvent(payload: PaymentSuccessMessage): void {
-    this.kafkaClient.emit<KafkaTopic, PaymentSuccessMessage>(
-      KafkaTopic.PAYMENT_SUCCESS,
+    this.kafkaClient.emit<KafkaMessage, PaymentSuccessMessage>(
+      KafkaMessage.PAYMENT_SUCCESS,
       payload,
     );
   }
 
   producePaymentFailureEvent(payload: PaymentFailureMessage): void {
-    this.kafkaClient.emit<KafkaTopic, PaymentFailureMessage>(
-      KafkaTopic.PAYMENT_FAILURE,
+    this.kafkaClient.emit<KafkaMessage, PaymentFailureMessage>(
+      KafkaMessage.PAYMENT_FAILURE,
       payload,
     );
   }

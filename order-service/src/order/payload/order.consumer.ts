@@ -5,3 +5,5 @@ export class PaymentSuccessMessage {
 export class PaymentFailureMessage {
   orderId: number;
 }
+
+export class CreateOrderMessage {}

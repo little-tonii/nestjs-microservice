@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { PaymentEntity } from '../entity/payment.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaymentProducer } from '../message/payment.producer';
-import { OrderCreatedMessage } from '../dto/payment.consumer';
+import { PaymentProducer } from '../kafka/payment.producer';
+import { OrderCreatedMessage } from '../payload/payment.consumer';
 import { PaymentStatus } from '../entity/payment-status.enum';
 
 @Injectable()

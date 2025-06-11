@@ -4,24 +4,24 @@ import { EventPattern, Payload } from '@nestjs/microservices';
 import {
   PaymentFailureMessage,
   PaymentSuccessMessage,
-} from '../dto/order.consumer';
-import { KafkaTopic } from 'src/common/const/kafka.const';
+} from '../payload/order.consumer';
+import { KafkaMessage } from 'src/common/const/kafka.const';
 
 @Controller()
 export class OrderConsumer {
   constructor(private readonly orderService: OrderService) {}
 
-  @EventPattern(KafkaTopic.PAYMENT_SUCCESS)
+  @EventPattern(KafkaMessage.PAYMENT_SUCCESS)
   async handlePaymentSuccessEvent(
     @Payload() payload: PaymentSuccessMessage,
   ): Promise<void> {
-    await this.orderService.confirmOrder(payload.orderId);
+    await this.orderService.confirmOrder(payload);
   }
 
-  @EventPattern(KafkaTopic.PAYMENT_FAILURE)
+  @EventPattern(KafkaMessage.PAYMENT_FAILURE)
   async handlePaymentFailureEvent(
     @Payload() payload: PaymentFailureMessage,
   ): Promise<void> {
-    await this.orderService.cancelOrder(payload.orderId);
+    await this.orderService.cancelOrder(payload);
   }
 }
