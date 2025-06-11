@@ -1,11 +1,11 @@
 import { Provider } from '@nestjs/common';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { ProviderConst } from '../const/provider.const';
+import { ProviderInjector } from '../const/provider.const';
 import { Environment } from '../type/environment.type';
 
 export const DatabaseConfigProvider: Provider<TypeOrmModuleOptions> = {
-  provide: ProviderConst.DATABASE_CONFIG_PROVIDER,
-  inject: [ProviderConst.ENV_PROVIDER],
+  provide: ProviderInjector.DATABASE_CONFIG_PROVIDER,
+  inject: [ProviderInjector.ENV_PROVIDER],
   useFactory: (environment: Environment): TypeOrmModuleOptions => {
     return {
       type: 'postgres',

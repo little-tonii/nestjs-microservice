@@ -1,11 +1,11 @@
 import { Provider } from '@nestjs/common';
 import { ClientProvider, Transport } from '@nestjs/microservices';
-import { ProviderConst } from '../const/provider.const';
+import { ProviderInjector } from '../const/provider.const';
 import { Environment } from '../type/environment.type';
 
 export const KafkaConfigProvider: Provider<ClientProvider> = {
-  provide: ProviderConst.KAFKA_CONFIG_PROVIDER,
-  inject: [ProviderConst.ENV_PROVIDER],
+  provide: ProviderInjector.KAFKA_CONFIG_PROVIDER,
+  inject: [ProviderInjector.ENV_PROVIDER],
   useFactory: (environment: Environment): ClientProvider => {
     return {
       transport: Transport.KAFKA,

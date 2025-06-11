@@ -1,13 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { ProviderConst } from 'src/common/const/provider.const';
+import { ProviderInjector } from 'src/common/const/provider.const';
 import { OrderCreatedMessage } from '../dto/order.producer';
 import { KafkaTopic } from 'src/common/const/kafka.const';
 
 @Injectable()
 export class OrderProducer {
   constructor(
-    @Inject(ProviderConst.KAFKA_PROVIDER)
+    @Inject(ProviderInjector.KAFKA_PROVIDER)
     private readonly kafkaClient: ClientKafka,
   ) {}
 

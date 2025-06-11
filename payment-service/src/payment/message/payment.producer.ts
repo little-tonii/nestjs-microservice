@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { ProviderConst } from 'src/common/const/provider.const';
+import { ProviderInjector } from 'src/common/const/provider.const';
 import {
   PaymentFailureMessage,
   PaymentSuccessMessage,
@@ -10,7 +10,7 @@ import { KafkaTopic } from 'src/common/const/kafka.const';
 @Injectable()
 export class PaymentProducer {
   constructor(
-    @Inject(ProviderConst.KAFKA_PROVIDER)
+    @Inject(ProviderInjector.KAFKA_PROVIDER)
     private readonly kafkaClient: ClientKafka,
   ) {}
 

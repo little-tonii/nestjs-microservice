@@ -1,39 +1,71 @@
+networks:
+  nestjs-microservice:
+    driver: bridge
+
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     container_name: zookeeper
     restart: unless-stopped
     env_file: .env
-    ports:
-      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_CLIENT_PORT}
+      ZOOKEEPER_TICK_TIME: ${ZOOKEEPER_TICK_TIME}
+    networks:
+      - nestjs-microservice
     volumes:
       - zookeeper-data:/var/lib/zookeeper
       - zookeeper-log:/var/log/zookeeper
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   kafka:
     image: confluentinc/cp-kafka:latest
     container_name: kafka
     restart: unless-stopped
     env_file: .env
+    environment:
+      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID}
+      KAFKA_ZOOKEEPER_CONNECT: ${KAFKA_ZOOKEEPER_CONNECT}
+      KAFKA_ADVERTISED_LISTENERS: ${KAFKA_ADVERTISED_LISTENERS}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP}
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: ${KAFKA_AUTO_CREATE_TOPICS_ENABLE}
+      KAFKA_DELETE_TOPIC_ENABLE: ${KAFKA_DELETE_TOPIC_ENABLE}
     depends_on:
       zookeeper:
-        condition: service_started
-    ports:
-      - "9092:9092"
+        condition: service_healthy
+    networks:
+      - nestjs-microservice
     volumes:
       - kafka-data:/var/lib/kafka/data
       - kafka-log:/var/log/kafka
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
     restart: unless-stopped
     env_file: .env
+    environment:
+      KAFKA_CLUSTERS_0_NAME: ${KAFKA_CLUSTERS_0_NAME}
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS}
     ports:
       - "8080:8080"
+    networks:
+      - nestjs-microservice
     depends_on:
       kafka:
-        condition: service_started
+        condition: service_healthy
 
   order-database:
     image: postgres:16
@@ -41,6 +73,8 @@ services:
     restart: unless-stopped
     ports:
       - "5432:5432"
+    networks:
+      - nestjs-microservice
     volumes:
       - order-database:/var/lib/postgresql/data
     env_file: ./order-service/.env
@@ -56,6 +90,8 @@ services:
     restart: unless-stopped
     ports:
       - "5433:5432"
+    networks:
+      - nestjs-microservice
     volumes:
       - payment-database:/var/lib/postgresql/data
     env_file: ./payment-service/.env
@@ -75,10 +111,10 @@ services:
       order-database:
         condition: service_healthy
       kafka:
-        condition: service_started
+        condition: service_healthy
     env_file: ./order-service/.env
-    ports:
-      - "3000:3000"
+    networks:
+      - nestjs-microservice
 
   payment-service:
     build:
@@ -90,15 +126,30 @@ services:
       payment-database:
         condition: service_healthy
       kafka:
-        condition: service_started
+        condition: service_healthy
     env_file: ./payment-service/.env
+    networks:
+      - nestjs-microservice
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: gateway
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file: ./gateway/.env
     ports:
-      - "3001:3000"
+      - "3000:3000"
+    networks:
+      - nestjs-microservice
 
 volumes:
-  order-database:
-  payment-database:
   zookeeper-data:
   zookeeper-log:
   kafka-data:
   kafka-log:
+  order-database:
+  payment-database:

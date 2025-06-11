@@ -1,4 +1,4 @@
-export enum ProviderConst {
+export enum ProviderInjector {
   ENV_PROVIDER = 'ENV_PROVIDER',
   DATABASE_CONFIG_PROVIDER = 'DATABASE_CONFIG_PROVIDER',
   KAFKA_PROVIDER = 'KAFKA_PROVIDER',
