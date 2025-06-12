@@ -1,5 +1,13 @@
 networks:
-  nestjs-microservice:
+  kafka-network:
+    driver: bridge
+  user-service-network:
+    driver: bridge
+  order-service-network:
+    driver: bridge
+  payment-service-network:
+    driver: bridge
+  communication-network:
     driver: bridge
 
 services:
@@ -12,7 +20,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_CLIENT_PORT}
       ZOOKEEPER_TICK_TIME: ${ZOOKEEPER_TICK_TIME}
     networks:
-      - nestjs-microservice
+      - kafka-network
     volumes:
       - zookeeper-data:/var/lib/zookeeper
       - zookeeper-log:/var/log/zookeeper
@@ -40,7 +48,8 @@ services:
       zookeeper:
         condition: service_healthy
     networks:
-      - nestjs-microservice
+      - kafka-network
+      - communication-network
     volumes:
       - kafka-data:/var/lib/kafka/data
       - kafka-log:/var/log/kafka
@@ -62,7 +71,7 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - nestjs-microservice
+      - kafka-network
     depends_on:
       kafka:
         condition: service_healthy
@@ -74,7 +83,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - nestjs-microservice
+      - order-service-network
     volumes:
       - order-database:/var/lib/postgresql/data
     env_file: .env
@@ -103,7 +112,7 @@ services:
     ports:
       - "5433:5432"
     networks:
-      - nestjs-microservice
+      - payment-service-network
     volumes:
       - payment-database:/var/lib/postgresql/data
     env_file: .env
@@ -132,7 +141,7 @@ services:
     ports:
       - "5434:5432"
     networks:
-      - nestjs-microservice
+      - user-service-network
     volumes:
       - user-database:/var/lib/postgresql/data
     env_file: .env
@@ -167,7 +176,8 @@ services:
         condition: service_healthy
     env_file: ./order-service/.env
     networks:
-      - nestjs-microservice
+      - order-service-network
+      - communication-network
 
   payment-service:
     build:
@@ -182,7 +192,8 @@ services:
         condition: service_healthy
     env_file: ./payment-service/.env
     networks:
-      - nestjs-microservice
+      - payment-service-network
+      - communication-network
 
   user-service:
     build:
@@ -197,7 +208,8 @@ services:
         condition: service_healthy
     env_file: ./user-service/.env
     networks:
-      - nestjs-microservice
+      - user-service-network
+      - communication-network
 
   gateway:
     build:
@@ -212,7 +224,7 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - nestjs-microservice
+      - communication-network
 
 volumes:
   zookeeper-data:
