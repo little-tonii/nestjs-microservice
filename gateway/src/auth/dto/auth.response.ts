@@ -1,9 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNumber, IsString } from 'class-validator';
+import { IsDate, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UserRegisterResponse {
   @ApiProperty()
   id: number;
+}
+
+export class UserLoginResponse {
+  @ApiProperty()
+  accessToken: string;
+
+  @ApiProperty()
+  refreshToken: string;
 }
 
 export class UserGotByEmailMessage {
@@ -18,6 +26,16 @@ export class UserGotByEmailMessage {
 
   @IsDate()
   updatedAt: Date;
+
+  @IsString()
+  password: string;
+
+  @IsNumber()
+  tokenVersion: number;
+
+  @IsString()
+  @IsOptional()
+  refreshToken: string | null;
 }
 
 export class UserCreatedMessage {

@@ -32,6 +32,9 @@ export class UserService {
           email: user.email,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
+          password: user.password,
+          refreshToken: user.refreshToken,
+          tokenVersion: user.tokenVersion,
         } as UserGotByEmailMessage;
       } else {
         return {

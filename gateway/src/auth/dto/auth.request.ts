@@ -13,6 +13,17 @@ export class UserRegisterRequest {
   password: string;
 }
 
+export class UserLoginRequest {
+  @IsString()
+  @IsEmail()
+  @ApiProperty()
+  email: string;
+
+  @IsString()
+  @ApiProperty()
+  password: string;
+}
+
 export class UserCreateMessage {
   email: string;
   password: string;

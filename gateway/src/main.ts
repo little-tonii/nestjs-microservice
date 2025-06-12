@@ -7,9 +7,13 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { CorsOptions } from 'cors';
 import { SwaggerConfig } from './common/const/swagger.const';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { HttpExceptionFilter } from './common/utils/exception-filter.util';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.useGlobalFilters(new HttpExceptionFilter());
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

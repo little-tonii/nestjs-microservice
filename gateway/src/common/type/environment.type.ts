@@ -10,4 +10,7 @@ export interface Environment {
   KAFKA_BROKER_PORT_1: number;
   KAFKA_CLIENT_ID: string;
   KAFKA_GROUP_ID: string;
+  JWT_SECRET: string;
+  ACCESS_TOKEN_EXPIRES: number;
+  REFRESH_TOKEN_EXPIRES: number;
 }

@@ -19,6 +19,11 @@ export const EnvProvider: Provider<Environment> = {
       USER_SERVICE_HOST: configService.get<string>('USER_SERVICE_HOST')!,
       USER_SERVICE_PORT: configService.get<number>('USER_SERVICE_PORT')!,
       SERVER_PORT: configService.get<number>('SERVER_PORT')!,
+      ACCESS_TOKEN_EXPIRES: configService.get<number>('ACCESS_TOKEN_EXPIRES')!,
+      REFRESH_TOKEN_EXPIRES: configService.get<number>(
+        'REFRESH_TOKEN_EXPIRES',
+      )!,
+      JWT_SECRET: configService.get<string>('JWT_SECRET')!,
     };
   },
 };

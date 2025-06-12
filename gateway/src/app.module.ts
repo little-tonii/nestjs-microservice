@@ -3,6 +3,7 @@ import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { ClientProvider, ClientsModule } from '@nestjs/microservices';
 import { ProviderInjector } from './common/const/provider.const';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -17,6 +18,12 @@ import { ProviderInjector } from './common/const/provider.const';
           useFactory: (kafkaConfig: ClientProvider) => kafkaConfig,
         },
       ],
+    }),
+    JwtModule.registerAsync({
+      global: true,
+      imports: [CommonModule],
+      inject: [ProviderInjector.JWT_CONFIG_PROVIDER],
+      useFactory: (jwtConfig: JwtModuleOptions) => jwtConfig,
     }),
     AuthModule,
   ],
