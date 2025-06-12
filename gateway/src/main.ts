@@ -55,6 +55,28 @@ async function bootstrap() {
     .setTitle(SwaggerConfig.TITLE)
     .setDescription(SwaggerConfig.DESCRIPTION)
     .setVersion(SwaggerConfig.VERSION)
+    // .addBearerAuth(
+    //   {
+    //     name: 'Authorization',
+    //     bearerFormat: 'Bearer',
+    //     scheme: 'Bearer',
+    //     type: 'http',
+    //     in: 'Header',
+    //   },
+    //   'access-token',
+    // )
+    .addOAuth2(
+      {
+        type: SwaggerConfig.OAUTH2,
+        flows: {
+          password: {
+            tokenUrl: SwaggerConfig.TOKEN_URL,
+            scopes: {},
+          },
+        },
+      },
+      SwaggerConfig.OAUTH2_NAME,
+    )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(SwaggerConfig.SWAGGER_URL, app, documentFactory, {

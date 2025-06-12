@@ -23,7 +23,8 @@ export const EnvProvider: Provider<Environment> = {
       REFRESH_TOKEN_EXPIRES: configService.get<number>(
         'REFRESH_TOKEN_EXPIRES',
       )!,
-      JWT_SECRET: configService.get<string>('JWT_SECRET')!,
+      JWT_ACCESS_SECRET: configService.get<string>('JWT_ACCESS_SECRET')!,
+      JWT_REFRESH_SECRET: configService.get<string>('JWT_REFRESH_SECRET')!,
     };
   },
 };

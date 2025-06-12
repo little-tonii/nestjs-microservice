@@ -17,11 +17,14 @@ export class UserLoginRequest {
   @IsString()
   @IsEmail()
   @ApiProperty()
-  email: string;
+  username: string;
 
   @IsString()
   @ApiProperty()
   password: string;
+
+  @IsString()
+  grant_type: string = 'password';
 }
 
 export class UserCreateMessage {

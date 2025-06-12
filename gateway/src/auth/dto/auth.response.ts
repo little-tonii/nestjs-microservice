@@ -8,10 +8,32 @@ export class UserRegisterResponse {
 
 export class UserLoginResponse {
   @ApiProperty()
-  accessToken: string;
+  access_token: string;
 
   @ApiProperty()
-  refreshToken: string;
+  refresh_token: string;
+
+  @ApiProperty()
+  token_type: string;
+}
+
+export class GetUserInfoResponse {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  email: number;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+}
+
+export class GetAccessTokenResponse {
+  @ApiProperty()
+  accessToken: string;
 }
 
 export class UserGotByEmailMessage {

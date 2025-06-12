@@ -62,7 +62,7 @@ export class AuthService {
 
   async loginUser(body: UserLoginRequest): Promise<UserLoginResponse> {
     const getUserResponse = await this.authProducer.produceUserGetByEmailEvent({
-      email: body.email,
+      email: body.username,
     });
     const getUserError = plainToInstance(ServiceErrorMessage, getUserResponse);
     if (getUserError.message) {
@@ -82,13 +82,18 @@ export class AuthService {
       email: getUserData.email,
       version: getUserData.tokenVersion,
     };
-    const accessToken = await this.jwtService.signAsync(claims);
+    const accessToken = await this.jwtService.signAsync(claims, {
+      expiresIn: this.environment.ACCESS_TOKEN_EXPIRES,
+      secret: this.environment.JWT_ACCESS_SECRET,
+    });
     const refreshToken = await this.jwtService.signAsync(claims, {
       expiresIn: this.environment.REFRESH_TOKEN_EXPIRES,
+      secret: this.environment.JWT_REFRESH_SECRET,
     });
     return {
-      accessToken,
-      refreshToken,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      token_type: 'Bearer',
     };
   }
 }

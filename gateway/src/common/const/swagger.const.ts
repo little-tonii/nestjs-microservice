@@ -5,4 +5,7 @@ export enum SwaggerConfig {
   SWAGGER_URL = 'swagger-ui',
   JSON_DOCUMENT_URL = 'swagger/json',
   YAML_DOCUMENT_URL = 'swagger/yaml',
+  OAUTH2 = 'oauth2',
+  TOKEN_URL = '/auth/login',
+  OAUTH2_NAME = 'password-flow',
 }

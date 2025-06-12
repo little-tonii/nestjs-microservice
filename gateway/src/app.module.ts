@@ -22,7 +22,7 @@ import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
     JwtModule.registerAsync({
       global: true,
       imports: [CommonModule],
-      inject: [ProviderInjector.JWT_CONFIG_PROVIDER],
+      inject: [ProviderInjector.JWT_ACCESS_CONFIG_PROVIDER],
       useFactory: (jwtConfig: JwtModuleOptions) => jwtConfig,
     }),
     AuthModule,
