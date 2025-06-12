@@ -31,11 +31,6 @@ export class GetUserInfoResponse {
   updatedAt: Date;
 }
 
-export class GetAccessTokenResponse {
-  @ApiProperty()
-  accessToken: string;
-}
-
 export class UserGotByEmailMessage {
   @IsNumber()
   id: number;
