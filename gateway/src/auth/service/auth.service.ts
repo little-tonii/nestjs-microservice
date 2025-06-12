@@ -15,12 +15,12 @@ import {
   UserRegisterResponse,
 } from '../dto/auth.response';
 import * as bcrypt from 'bcrypt';
-import { plainToInstance } from 'class-transformer';
 import { ExceptionWrapper } from 'src/common/utils/status.util';
 import { Environment } from 'src/common/type/environment.type';
 import { ProviderInjector } from 'src/common/const/provider.const';
 import { JwtService } from '@nestjs/jwt';
 import { Claims } from 'src/common/utils/jwt.util';
+import { isServiceErrorMessage } from 'src/common/utils/type-checker.util';
 
 @Injectable()
 export class AuthService {
@@ -35,8 +35,8 @@ export class AuthService {
     const getUserResponse = await this.authProducer.produceUserGetByEmailEvent({
       email: body.email,
     });
-    const getUserError = plainToInstance(ServiceErrorMessage, getUserResponse);
-    if (getUserError.message) {
+    const getUserError = JSON.parse(getUserResponse) as ServiceErrorMessage;
+    if (isServiceErrorMessage(getUserError)) {
       if (getUserError.code != HttpStatus.NOT_FOUND.valueOf()) {
         throw ExceptionWrapper(getUserError);
       }
@@ -47,16 +47,15 @@ export class AuthService {
       email: body.email,
       password: await bcrypt.hash(body.password, 12),
     });
-    const createUserError = plainToInstance(
-      ServiceErrorMessage,
+    const createUserError = JSON.parse(
       createUserResponse,
-    );
-    if (createUserError.message) {
+    ) as ServiceErrorMessage;
+    if (isServiceErrorMessage(createUserError)) {
       throw ExceptionWrapper(createUserError);
     }
-    const data = plainToInstance(UserCreatedMessage, createUserResponse);
+    const createUserData = JSON.parse(createUserResponse) as UserCreatedMessage;
     return {
-      id: data.id,
+      id: createUserData.id,
     };
   }
 
@@ -64,8 +63,8 @@ export class AuthService {
     const getUserResponse = await this.authProducer.produceUserGetByEmailEvent({
       email: body.username,
     });
-    const getUserError = plainToInstance(ServiceErrorMessage, getUserResponse);
-    if (getUserError.message) {
+    const getUserError = JSON.parse(getUserResponse) as ServiceErrorMessage;
+    if (isServiceErrorMessage(getUserError)) {
       if (getUserError.code == HttpStatus.NOT_FOUND.valueOf()) {
         throw new UnauthorizedException('Email or password is incorrect');
       }
@@ -73,7 +72,7 @@ export class AuthService {
         throw ExceptionWrapper(getUserError);
       }
     }
-    const getUserData = plainToInstance(UserGotByEmailMessage, getUserResponse);
+    const getUserData = JSON.parse(getUserResponse) as UserGotByEmailMessage;
     if (!(await bcrypt.compare(body.password, getUserData.password))) {
       throw new UnauthorizedException('Email or password is incorrect');
     }
