@@ -174,5 +174,42 @@ describe('AuthService', () => {
         InternalServerErrorException,
       );
     });
+
+    it('should throw TimeoutError if kafka times out when getting user by email', () => {
+      const createUserError: ServiceErrorMessage = {
+        code: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Kafka timeout',
+      };
+      mockAuthProducer.produceUserCreateEvent.mockResolvedValue(
+        JSON.stringify(createUserError),
+      );
+      isServiceErrorMessageSpy.mockReturnValueOnce(true);
+    });
+
+    it('should throw TimeoutError if kafka times out when creating user', async () => {
+      const getUserError: ServiceErrorMessage = {
+        code: HttpStatus.NOT_FOUND,
+        message: 'User not found',
+      };
+      mockAuthProducer.produceUserGetByEmailEvent.mockResolvedValue(
+        JSON.stringify(getUserError),
+      );
+      isServiceErrorMessageSpy.mockReturnValueOnce(true);
+
+      (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
+
+      const createUserError: ServiceErrorMessage = {
+        code: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Kafka timeout',
+      };
+      mockAuthProducer.produceUserCreateEvent.mockResolvedValue(
+        JSON.stringify(createUserError),
+      );
+      isServiceErrorMessageSpy.mockReturnValueOnce(true);
+
+      await expect(authService.registerUser(body)).rejects.toThrow(
+        InternalServerErrorException,
+      );
+    });
   });
 });

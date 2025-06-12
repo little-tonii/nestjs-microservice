@@ -5,7 +5,7 @@ import { ProviderInjector } from 'src/common/const/provider.const';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { KafkaMessage } from 'src/common/const/kafka.const';
 import { UserCreateMessage, UserGetByEmailMessage } from '../dto/auth.request';
-import { of } from 'rxjs';
+import { NEVER, of, TimeoutError } from 'rxjs';
 import {
   UserCreatedMessage,
   UserGotByEmailMessage,
@@ -69,6 +69,15 @@ describe('AuthProducer', () => {
       expect(mockKafkaClient.send.mock.calls[0][1]).toBe(payload);
       expect(result).toBe(mockResponse);
     });
+
+    it('should throw TimeoutError if response takes too long', async () => {
+      const payload: UserGetByEmailMessage = { email: 'test@gmail.com' };
+      mockKafkaClient.send.mockReturnValue(NEVER);
+
+      await expect(
+        authProducer.produceUserGetByEmailEvent(payload),
+      ).rejects.toThrow(TimeoutError);
+    }, 6000);
   });
 
   describe('produceUserCreateEvent', () => {
@@ -89,5 +98,17 @@ describe('AuthProducer', () => {
       expect(mockKafkaClient.send.mock.calls[0][1]).toBe(payload);
       expect(result).toBe(mockResponse);
     });
+
+    it('should throw TimeoutError if response takes too long', async () => {
+      const payload: UserCreateMessage = {
+        email: 'test@gmail.com',
+        password: 'hashedPassword',
+      };
+      mockKafkaClient.send.mockReturnValue(NEVER);
+
+      await expect(
+        authProducer.produceUserCreateEvent(payload),
+      ).rejects.toThrow(TimeoutError);
+    }, 6000);
   });
 });
