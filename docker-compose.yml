@@ -1,39 +1,80 @@
+networks:
+  kafka-network:
+    driver: bridge
+  user-service-network:
+    driver: bridge
+  order-service-network:
+    driver: bridge
+  payment-service-network:
+    driver: bridge
+  communication-network:
+    driver: bridge
+
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     container_name: zookeeper
     restart: unless-stopped
     env_file: .env
-    ports:
-      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_CLIENT_PORT}
+      ZOOKEEPER_TICK_TIME: ${ZOOKEEPER_TICK_TIME}
+    networks:
+      - kafka-network
     volumes:
       - zookeeper-data:/var/lib/zookeeper
       - zookeeper-log:/var/log/zookeeper
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   kafka:
     image: confluentinc/cp-kafka:latest
     container_name: kafka
     restart: unless-stopped
     env_file: .env
+    environment:
+      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID}
+      KAFKA_ZOOKEEPER_CONNECT: ${KAFKA_ZOOKEEPER_CONNECT}
+      KAFKA_ADVERTISED_LISTENERS: ${KAFKA_ADVERTISED_LISTENERS}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP}
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: ${KAFKA_AUTO_CREATE_TOPICS_ENABLE}
+      KAFKA_DELETE_TOPIC_ENABLE: ${KAFKA_DELETE_TOPIC_ENABLE}
     depends_on:
       zookeeper:
-        condition: service_started
-    ports:
-      - "9092:9092"
+        condition: service_healthy
+    networks:
+      - kafka-network
+      - communication-network
     volumes:
       - kafka-data:/var/lib/kafka/data
       - kafka-log:/var/log/kafka
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
     restart: unless-stopped
     env_file: .env
+    environment:
+      KAFKA_CLUSTERS_0_NAME: ${KAFKA_CLUSTERS_0_NAME}
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS}
     ports:
       - "8080:8080"
+    networks:
+      - kafka-network
     depends_on:
       kafka:
-        condition: service_started
+        condition: service_healthy
 
   order-database:
     image: postgres:16
@@ -41,11 +82,25 @@ services:
     restart: unless-stopped
     ports:
       - "5432:5432"
+    networks:
+      - order-service-network
     volumes:
       - order-database:/var/lib/postgresql/data
-    env_file: ./order-service/.env
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${ORDER_DATABASE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${ORDER_DATABASE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${ORDER_DATABASE_POSTGRES_DB}
     healthcheck:
-      test: pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${ORDER_DATABASE_POSTGRES_USER}",
+          "-d",
+          "${ORDER_DATABASE_POSTGRES_DB}",
+        ]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -56,11 +111,54 @@ services:
     restart: unless-stopped
     ports:
       - "5433:5432"
+    networks:
+      - payment-service-network
     volumes:
       - payment-database:/var/lib/postgresql/data
-    env_file: ./payment-service/.env
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${PAYMENT_DATABASE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${PAYMENT_DATABASE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${PAYMENT_DATABASE_POSTGRES_DB}
     healthcheck:
-      test: pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${PAYMENT_DATABASE_POSTGRES_USER}",
+          "-d",
+          "${PAYMENT_DATABASE_POSTGRES_DB}",
+        ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  user-database:
+    image: postgres:16
+    container_name: user-database
+    restart: unless-stopped
+    ports:
+      - "5434:5432"
+    networks:
+      - user-service-network
+    volumes:
+      - user-database:/var/lib/postgresql/data
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${USER_DATABASE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${USER_DATABASE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${USER_DATABASE_POSTGRES_DB}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${USER_DATABASE_POSTGRES_USER}",
+          "-d",
+          "${USER_DATABASE_POSTGRES_DB}",
+        ]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -75,10 +173,11 @@ services:
       order-database:
         condition: service_healthy
       kafka:
-        condition: service_started
+        condition: service_healthy
     env_file: ./order-service/.env
-    ports:
-      - "3000:3000"
+    networks:
+      - order-service-network
+      - communication-network
 
   payment-service:
     build:
@@ -90,15 +189,48 @@ services:
       payment-database:
         condition: service_healthy
       kafka:
-        condition: service_started
+        condition: service_healthy
     env_file: ./payment-service/.env
+    networks:
+      - payment-service-network
+      - communication-network
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    restart: unless-stopped
+    depends_on:
+      user-database:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    env_file: ./user-service/.env
+    networks:
+      - user-service-network
+      - communication-network
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: gateway
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file: ./gateway/.env
     ports:
-      - "3001:3000"
+      - "3000:3000"
+    networks:
+      - communication-network
 
 volumes:
-  order-database:
-  payment-database:
   zookeeper-data:
   zookeeper-log:
   kafka-data:
   kafka-log:
+  order-database:
+  payment-database:
+  user-database:

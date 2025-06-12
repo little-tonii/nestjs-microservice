@@ -2,13 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderEntity } from './entity/order.entity';
 import { OrderService } from './service/order.service';
-import { OrderProducer } from './message/order.producer';
-import { OrderController } from './controller/order.controller';
-import { OrderConsumer } from './message/order.consumer';
+import { OrderProducer } from './kafka/order.producer';
+import { OrderConsumer } from './kafka/order.consumer';
 
 @Module({
   imports: [TypeOrmModule.forFeature([OrderEntity])],
   providers: [OrderService, OrderProducer],
-  controllers: [OrderController, OrderConsumer],
+  controllers: [OrderConsumer],
 })
 export class OrderModule {}

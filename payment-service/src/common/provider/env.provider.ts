@@ -1,10 +1,10 @@
 import { ConfigService } from '@nestjs/config';
-import { ProviderConst } from '../const/provider.const';
+import { ProviderInjector } from '../const/provider.const';
 import { Environment } from '../type/environment.type';
 import { Provider } from '@nestjs/common';
 
 export const EnvProvider: Provider<Environment> = {
-  provide: ProviderConst.ENV_PROVIDER,
+  provide: ProviderInjector.ENV_PROVIDER,
   inject: [ConfigService],
   useFactory: (configService: ConfigService): Environment => {
     return {
